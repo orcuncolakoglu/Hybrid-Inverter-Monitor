@@ -1,0 +1,186 @@
+@page "/pvgen/history"
+@using InverterMon.Shared.Models
+@inject HttpClient Http
+
+<PageTitle>PV Generation History</PageTitle>
+
+<div>
+    @if (lifetime is not null && lifetime.DaysRecorded > 0)
+    {
+        <div class="bg-dark text-white text-center p-3">
+            <div class="text-uppercase small opacity-75">Lifetime Generation</div>
+            <div class="fs-2"><b>@lifetime.TotalKiloWattHours</b> kWh</div>
+            <div class="small opacity-75">
+                @lifetime.DaysRecorded days &middot; @lifetime.AverageKiloWattHours kWh/day avg
+                &middot; best <a class="text-info text-decoration-none" href="pvgen?day=@lifetime.BestDayNumber">@lifetime.BestDayKiloWattHours kWh (@lifetime.BestDayName)</a>
+            </div>
+            <div class="small opacity-50">@lifetime.FirstDayName &ndash; @lifetime.LastDayName</div>
+        </div>
+    }
+
+    <div class="bg-dark bg-opacity-10 text-center p-3">
+        <div class="btn-group mb-3" role="group">
+            <button class="btn @PeriodCss("week")" @onclick="@(() => SetPeriod("week"))">Week</button>
+            <button class="btn @PeriodCss("month")" @onclick="@(() => SetPeriod("month"))">Month</button>
+            <button class="btn @PeriodCss("year")" @onclick="@(() => SetPeriod("year"))">Year</button>
+        </div>
+
+        @if (history is not null)
+        {
+            <h3>
+                <button class="btn bg-white" @onclick="GetPrevPeriod">
+                    <span class="oi oi-arrow-thick-left"></span>
+                </button>
+                <span class="mx-3">@history.RangeName</span>
+                <button class="btn bg-white" @onclick="GetNextPeriod" disabled="@history.IsCurrentPeriod">
+                    <span class="oi oi-arrow-thick-right"></span>
+                </button>
+            </h3>
+        }
+    </div>
+
+    @if (history is null)
+    {
+        <Loader Enabled=true />
+    }
+    else
+    {
+        <Column Data="history.Points" Config="cConf" />
+
+        <div class="row text-center g-0 my-3">
+            <div class="col">
+                <div class="bg-light p-3 mx-1">
+                    <div class="text-muted small">Total</div>
+                    <b class="fs-4">@history.TotalKiloWattHours</b> kWh
+                </div>
+            </div>
+            <div class="col">
+                <div class="bg-light p-3 mx-1">
+                    <div class="text-muted small">Daily Average</div>
+                    <b class="fs-4">@history.AverageKiloWattHours</b> kWh
+                </div>
+            </div>
+            <div class="col">
+                @if (history.DaysRecorded > 0)
+                {
+                    <a href="pvgen?day=@history.BestDayNumber" class="bg-light p-3 mx-1 d-block text-decoration-none text-dark">
+                        <div class="text-muted small">Peak Day <span class="oi oi-magnifying-glass"></span></div>
+                        <b class="fs-4">@history.BestDayKiloWattHours</b> kWh
+                        <div class="small">@history.BestDayName</div>
+                    </a>
+                }
+                else
+                {
+                    <div class="bg-light p-3 mx-1">
+                        <div class="text-muted small">Peak Day</div>
+                        <b class="fs-4">@history.BestDayKiloWattHours</b> kWh
+                        <div class="small">@history.BestDayName</div>
+                    </div>
+                }
+            </div>
+            <div class="col">
+                <div class="bg-light p-3 mx-1">
+                    <div class="text-muted small">Days Recorded</div>
+                    <b class="fs-4">@history.DaysRecorded</b>
+                </div>
+            </div>
+        </div>
+
+        @if (history.BestDays.Any())
+        {
+            <h5 class="bg-light text-center p-2">Top Generating Days</h5>
+            <div class="list-group mb-3">
+                @foreach (var d in history.BestDays)
+                {
+                    <a href="pvgen?day=@d.DayNumber"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="oi oi-magnifying-glass me-2 text-muted small"></span>@d.Label
+                        </span>
+                        <span><b>@d.KiloWattHours</b> kWh</span>
+                    </a>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private PVHistory? history;
+    private PVLifetime? lifetime;
+    private string period = "week";
+    private int offset;
+
+    private ColumnConfig cConf = new()
+    {
+        Padding = "auto",
+        AutoFit = true,
+        XField = "Label",
+        YField = "kWh",
+        ColumnStyle = new()
+        {
+            Fill = "l(270) 0:#7ec2f3 1:#1890ff"
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Fetch();
+
+        try
+        {
+            lifetime = await Http.GetFromJsonAsync<PVLifetime>("api/pv-log/get-pv-lifetime");
+        }
+        catch (Exception)
+        {
+            //ignore
+        }
+    }
+
+    private string PeriodCss(string p)
+        => period == p ? "btn-primary" : "btn-outline-primary";
+
+    private async Task SetPeriod(string p)
+    {
+        if (period == p)
+            return;
+
+        period = p;
+        offset = 0;
+        history = null;
+        await Fetch();
+        StateHasChanged();
+    }
+
+    private async Task Fetch()
+    {
+        try
+        {
+            history = await Http.GetFromJsonAsync<PVHistory>(
+                $"api/pv-log/get-pv-history/{period}/{offset}");
+        }
+        catch (Exception)
+        {
+            //ignore
+        }
+    }
+
+    private async Task GetPrevPeriod()
+    {
+        offset++;
+        history = null;
+        await Fetch();
+        StateHasChanged();
+    }
+
+    private async Task GetNextPeriod()
+    {
+        if (offset == 0)
+            return;
+
+        offset--;
+        history = null;
+        await Fetch();
+        StateHasChanged();
+    }
+}

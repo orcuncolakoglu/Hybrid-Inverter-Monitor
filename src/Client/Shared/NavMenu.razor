@@ -7,6 +7,9 @@
         <a class="settings" href="pvgen">
             <span class="oi oi-document" aria-hidden="true"></span>
         </a>
+        <a class="settings" href="pvgen/history">
+            <span class="oi oi-bar-chart" aria-hidden="true"></span>
+        </a>
         <a class="settings" href="settings">
             <span class="oi oi-command" aria-hidden="true"></span>
         </a>
@@ -29,8 +32,13 @@
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="pvgen">
+            <NavLink class="nav-link" href="pvgen" Match="NavLinkMatch.All">
                 <span class="oi oi-document" aria-hidden="true"></span> PV Generation
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="pvgen/history">
+                <span class="oi oi-bar-chart" aria-hidden="true"></span> PV History
             </NavLink>
         </div>
         <div class="nav-item px-3">

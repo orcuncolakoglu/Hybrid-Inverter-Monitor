@@ -44,7 +44,7 @@ public class Endpoint : Endpoint<Request, PVDay>
         Response.GraphTickCount = UsrSettings.PVGraphTickCount;
         Response.TotalKiloWattHours = Math.Round(pvDay.TotalWattHours / 1000, 2);
         Response.DayNumber = pvDay.Id;
-        Response.DayName = DateOnly.FromDayNumber(pvDay.Id).ToString("dddd MMMM dd");
+        Response.DayName = DateOnly.FromDayNumber(pvDay.Id).ToString("yyyy.MM.dd dddd");
         Response.WattPeaks = pvDay.WattPeaks.Select(
             p => new PVDay.WattPeak
             {

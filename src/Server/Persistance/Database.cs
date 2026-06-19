@@ -80,6 +80,15 @@ public class Database
     public PVGeneration? GetPvGenForDay(int dayNumber)
         => _pvGenCollection.FindOne(p => p.Id == dayNumber);
 
+    public IEnumerable<PVGeneration> GetPvGenForRange(int fromDayNumber, int toDayNumber)
+        => _pvGenCollection
+           .Query()
+           .Where(p => p.Id >= fromDayNumber && p.Id <= toDayNumber)
+           .ToList();
+
+    public IEnumerable<PVGeneration> GetAllPvGen()
+        => _pvGenCollection.Query().ToList();
+
     public void RestoreUserSettings()
     {
         var settings = _usrSettingsCollection.FindById(1);
