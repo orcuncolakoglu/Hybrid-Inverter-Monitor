@@ -1,0 +1,22 @@
+Act like a senior engineer working on a large, unfamiliar codebase.
+First, understand the architecture and data flow.
+
+This is a Monitoring application for hybrid inverters using the Voltronic communication protocol via USB port.
+
+Languages used are;
+C# 46.5%, HTML 45.8%, CSS 5.4%, JavaScript 2.2%, Batchfile 0.1%
+
+Return:
+* architectural summary
+* problematic areas
+* refactor strategy
+* improved architecture
+* rewritten code
+
+Keep functionality the same, improve quality.
+
+Requirements:
+Basic login prompt with username and password. No auth, middleware etc.
+Improve PV Generation dashboard as now it only shows current day.
+
+And needs to be complied after finishing everything.
